@@ -25,10 +25,7 @@ async def allocate_vehicle(allocation: Allocation):
 
     await allocation_collection.insert_one(allocation_data)
 
-    
-    new_allocation = await allocation_collection.find_one({"employee_id": allocation_data["employee_id"], "vehicle_id" : allocation_data["vehicle_id"]})
-
-    return objid_str(new_allocation)
+    return allocation
 
 @router.put("/allocate/{allocation_id}", response_model=Allocation)
 async def update_allocation(allocation_id: str, allocation: Allocation):
@@ -46,9 +43,7 @@ async def update_allocation(allocation_id: str, allocation: Allocation):
 
     await allocation_collection.update_one({"_id": ObjectId(allocation_id)}, {"$set": updated_data})
 
-    recently_updated_data= await allocation_collection.find_one({'employee_id':updated_data["employee_id"],"vehicle_id":updated_data["vehicle_id"]})
-
-    return objid_str(recently_updated_data)
+    return allocation
 
 @router.delete("/allocate/{allocation_id}")
 async def delete_allocation(allocation_id: str):
@@ -65,7 +60,7 @@ async def delete_allocation(allocation_id: str):
     return {"message": "Allocation deleted"}
 
 @router.get("/allocate/getAll")
-async def allocation_getAll():
+async def get_all_allocations():
     all_allocations = await allocation_collection.find().to_list()
     all_allocations = [objid_str(single_allocation) for single_allocation in all_allocations]
     return all_allocations
