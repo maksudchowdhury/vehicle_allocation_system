@@ -1,20 +1,29 @@
 # routes/allocation.py
 from fastapi import APIRouter, HTTPException
 from models.allocation import Allocation
-from utils.db import allocation_collection,employee_collection
+from utils.db import allocation_collection,employee_collection,vehicle_collection
 from utils.objid_str import objid_str
 from datetime import datetime,date
 from bson import ObjectId
 
 router = APIRouter()
 
-@router.post("/allocate/vehicle/{employee_id}", response_model=Allocation)
-async def allocate_vehicle(employee_id,allocation: Allocation):
+@router.post("/allocate/vehicle", response_model=Allocation)
+async def allocate_vehicle(allocation: Allocation):
+
+    # getting iterable data
+    allocation_data = allocation.model_dump()
 
     #ensure user is valid
-    valid_uesr= await employee_collection.find_one({"_id": ObjectId(employee_id)})
+    valid_uesr= await employee_collection.find_one({"_id": ObjectId(allocation_data["employee_id"])})
     if not valid_uesr:
         raise HTTPException(status_code=400, detail="Id for employee is not valid")
+    
+    #ensure car is valid
+    valid_car= await vehicle_collection.find_one({"_id": ObjectId(allocation_data["vehicle_id"])})
+    if not valid_car:
+        raise HTTPException(status_code=400, detail="Id for car is not valid")
+    
 
     # allocation_date = datetime.combine(allocation.date, datetime.min.time())
     print(allocation.date, datetime.today())
@@ -70,3 +79,16 @@ async def get_all_allocations():
     all_allocations = await allocation_collection.find().to_list()
     all_allocations = [objid_str(single_allocation) for single_allocation in all_allocations]
     return all_allocations
+
+
+@router.get("/allocate/{employee_id}")
+async def get_user_specific_allocation(employee_id:str):
+    
+    #ensure user is valid
+    valid_uesr= await employee_collection.find_one({"_id": ObjectId(employee_id)})
+    if not valid_uesr:
+        raise HTTPException(status_code=400, detail="Id for employee is not valid")
+    
+    users_allocations = await allocation_collection.find({"employee_id":employee_id}).to_list()
+    users_allocations_convertedList=[objid_str(each_allocation) for each_allocation in users_allocations]
+    return users_allocations_convertedList
