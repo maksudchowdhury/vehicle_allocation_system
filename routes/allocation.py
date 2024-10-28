@@ -1,15 +1,21 @@
 # routes/allocation.py
 from fastapi import APIRouter, HTTPException
 from models.allocation import Allocation
-from utils.db import allocation_collection
+from utils.db import allocation_collection,employee_collection
 from utils.objid_str import objid_str
 from datetime import datetime,date
 from bson import ObjectId
 
 router = APIRouter()
 
-@router.post("/allocate/vehicle", response_model=Allocation)
-async def allocate_vehicle(allocation: Allocation):
+@router.post("/allocate/vehicle/{employee_id}", response_model=Allocation)
+async def allocate_vehicle(employee_id,allocation: Allocation):
+
+    #ensure user is valid
+    valid_uesr= await employee_collection.find_one({"_id": ObjectId(employee_id)})
+    if not valid_uesr:
+        raise HTTPException(status_code=400, detail="Id for employee is not valid")
+
     # allocation_date = datetime.combine(allocation.date, datetime.min.time())
     print(allocation.date, datetime.today())
     if allocation.date < datetime.today():
