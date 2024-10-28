@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from models.allocation import Allocation
 from utils.db import allocation_collection
 from utils.objid_str import objid_str
-from datetime import datetime
+from datetime import datetime,date
 from bson import ObjectId
 
 router = APIRouter()
